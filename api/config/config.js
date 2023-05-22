@@ -6,6 +6,6 @@ module.exports = {
 
     SECRET: 'walletWatcher',
 
-    CLIENTHOSTNAME: '127.0.0.1',
+    CLIENTHOSTNAME: 'localhost',
     CLIENTPORT: '3000'
 }
