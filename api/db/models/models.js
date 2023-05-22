@@ -3,11 +3,6 @@
 const mongoose = require('mongoose');
 
 const expenseSchema = new mongoose.Schema ({
-    type: {
-      type: String,
-      enum: ['Expense', 'Income'],
-      require: true
-    },
     title: {
       type: String,
       require: true
@@ -29,11 +24,6 @@ const expenseSchema = new mongoose.Schema ({
 });
 
 const incomeSchema = new mongoose.Schema ({
-    type: {
-      type: String,
-      enum: ['Expense', 'Income'],
-      require: true
-    },
     title: {
         type: String,
         require: true
@@ -68,8 +58,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     require: true
   },
-  expenses: expenseSchema,
-  incomes: incomeSchema
+  expenses: [{
+    type: expenseSchema
+  }],
+  incomes: [{
+    type: incomeSchema
+  }]
 });
 
 const userModel = mongoose.model('user', userSchema);

@@ -19,8 +19,12 @@ export default function LoginPage (props) {
             "password": password
         }).then((data) => {
             console.log(data);
+            if (data.code === '0000') {
+                props.onLoginStatusChange(true);
+            } else {
+                setPassword('');
+            }
         });
-        props.onLoginStatusChange((status) => status = true);
     }
 
     return (

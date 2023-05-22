@@ -3,28 +3,28 @@ const router = express.Router();
 const model = require('../../../db/models/models');
 
 const getAccountById = function (id) {
-    model.find({"expenses._id": `${id}`}, (err, data) => {
-        if (err) return null;
-        else return data;
+    model.find({"expenses._id": `${id}`}).then((data) => {
+        return data;
+    }).catch((err) => {
+        console.log(err);
     })
 }
 
 router.get('/:pageNumber', (req, res) => {
     const {pageNumber} = req.params;
-    model.find({username: req.user}).sort({time: -1}).skip((pageNumber - 1)*10).limit(10).exec((err, data) => {
-        if (err) {
-            res.json({
-                code: '1001',
-                msg: 'failed to read expenses',
-                data: null
-            });
-        }
-        else res.json({
+    model.findOne({username: req.user.username}, {expenses: 1}).sort({time: -1}).skip((pageNumber - 1)*10).limit(10).then((data) => {
+        return res.json({
             code: '0000',
             msg: 'successfully read expenses',
             data: data
         })
-    });
+    }).catch((err) => {
+        return res.json({
+            code: '1001',
+            msg: 'failed to read expenses',
+            data: null
+        });
+    })
 })
 
 // api for dropping the selected account from db

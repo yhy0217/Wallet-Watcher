@@ -6,6 +6,7 @@ var {expenseModel, incomeModel} = require('../../../db/models/models');
 var authMiddleware = require('../../../middlewares/authenticateApiMiddleware');
 var expenseRouter = require('./expense');
 var incomeRouter = require('./income');
+const userModel = require('../../../db/models/models');
 
 router.use(authMiddleware);
 
@@ -17,7 +18,7 @@ router.use('/income', incomeRouter);
 router.post('/newAccount', function (req, res) {
     // express frame has already use middlewares to parse the
     // request body (body-parser) and the data to property req.body
-    const {type, date, amount, category, desc} = req.body;
+    let {type, title, date, amount, category, desc} = req.body;
     // handle invalid inputs
     if (!type || !(['Expense','Income'].includes(type))) {
         return res.json({
@@ -25,7 +26,13 @@ router.post('/newAccount', function (req, res) {
             msg: 'failed to create a new expense account; wrong or missing type information',
             data: null
         })
-    } else if (!amount || typeof amount !== Number) {
+    } else if (!title) {
+        return res.json({
+            code: '1004',
+            msg: 'failed to create a new expense account; missing title information',
+            data: null
+        })
+    } else if (!amount) {
         return res.json({
             code: '1004',
             msg: 'failed to create a new expense account; wrong or missing amount information',
@@ -38,46 +45,23 @@ router.post('/newAccount', function (req, res) {
             data: null
         })
     }
-
-    if (type === 'Expense') {
-        expenseModel.create({
-            ...req.body,
-            date: date ? moment(req.body.date).format('YYYY-MM-DD') : null
-        }, (err, data) => {
-            if (err) {
-                res.json({
-                    code: '1002',
-                    msg: 'failed to create a new expense account',
-                    data: null
-                })
-            } else {
-                res.json({
-                    code: '0000',
-                    msg: 'a new expense account has been successfully created',
-                    data: data
-                })
-            }
-        })
-    } else {
-        incomeModel.create({
-            ...req.body,
-            date: moment(req.body.date).toDate()
-        }, (err, data) => {
-            if (err) {
-                res.json({
-                    code: '1002',
-                    msg: 'failed to create a new income account',
-                    data: null
-                })
-            } else {
-                res.json({
-                    code: '0000',
-                    msg: 'a new income account has been successfully created',
-                    data: data
-                })
-            }
-        });
-    }
-})
-
+    // db.collection.find returns **a Cursor** which is A pointer to the result set of a query. 
+    // Clients can iterate through a cursor to retrieve results
+    const newAccount = {
+        ...req.body,
+        date: date ? moment(req.body.date).format('YYYY-MM-DD') : null
+    };
+    type = type.toLowerCase();
+    let update = {};
+    update[type + 's'] = newAccount;
+    userModel.findOneAndUpdate({username: req.user.username}, {'$push': update}, {new: true}).then(data => res.json({
+        code: '0000',
+        msg: `a new ${type} account has been successfully created`,
+        data: data
+    })).catch(err => res.json({
+        code: '1001',
+        msg: `failed to create a new ${type} account`,
+        data: null
+    }));
+});
 module.exports = router;
